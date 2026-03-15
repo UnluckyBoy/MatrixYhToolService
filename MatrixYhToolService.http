@@ -1,0 +1,6 @@
+@MatrixYhToolService_HostAddress = http://localhost:5176
+
+GET {{MatrixYhToolService_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
