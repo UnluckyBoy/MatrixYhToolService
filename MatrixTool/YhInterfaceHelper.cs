@@ -21,7 +21,10 @@ namespace MatrixYhToolService.MatrixTool
         private static readonly Lazy<YhInterfaceHelper> _instance = new Lazy<YhInterfaceHelper>(() => new YhInterfaceHelper());
         public static YhInterfaceHelper Instance => _instance.Value;
 
-        // 初始化方法（被调用一次，由后台服务触发）
+        /// <summary>
+        /// 初始化方法（被调用一次，由后台服务触发）
+        /// </summary>
+        /// <returns></returns>
         public async Task<YhInterfaceResult> InitializeAsync()
         {
             if (_initialized) return _initResult;
@@ -49,7 +52,10 @@ namespace MatrixYhToolService.MatrixTool
             });
         }
 
-        // 销毁方法（应用停止时调用）
+        /// <summary>
+        /// 销毁方法（应用停止时调用）
+        /// </summary>
+        /// <returns></returns>
         public async Task<YhInterfaceResult> DestroyAsync()
         {
             if (!_initialized) return YhInterfaceResult.Success(1, "Not initialized");
@@ -72,7 +78,12 @@ namespace MatrixYhToolService.MatrixTool
             });
         }
 
-        // 调用方法，确保已初始化
+        /// <summary>
+        /// 调用方法，确保已初始化
+        /// </summary>
+        /// <param name="businessId"></param>
+        /// <param name="dataXml"></param>
+        /// <returns></returns>
         public async Task<YhInterfaceResult> CallAsync(string businessId, string dataXml)
         {
             if (string.IsNullOrWhiteSpace(dataXml))
@@ -110,6 +121,67 @@ namespace MatrixYhToolService.MatrixTool
                     catch (Exception ex)
                     {
                         return YhInterfaceResult.Fail($"调用失败: {ex.Message}");
+                    }
+                }
+            });
+        }
+
+        /// <summary>
+        /// 确认操作
+        /// </summary>
+        /// <param name="jylsh"></param>
+        /// <param name="jyyzm"></param>
+        /// <returns></returns>
+        public async Task<YhInterfaceResult> ConfirmAsync(string jylsh, string jyyzm)
+        {
+            if (!_initialized)
+                return YhInterfaceResult.Fail("组件尚未初始化，请先调用 InitializeAsync");
+
+            return await Task.Run(() =>
+            {
+                lock (_lock)
+                {
+                    try
+                    {
+                        object appCode = new object();
+                        object appMsg = new object();
+
+                        _comInstance.yh_interface_confirm(jylsh, jyyzm, ref appCode, ref appMsg);
+                        return YhInterfaceResult.Success(appCode, appMsg);
+                    }
+                    catch (Exception ex)
+                    {
+                        return YhInterfaceResult.Fail($"确认失败: {ex.Message}");
+                    }
+                }
+            });
+        }
+
+        /// <summary>
+        /// 取消操作
+        /// </summary>
+        /// <param name="jylsh"></param>
+        /// <returns></returns>
+        public async Task<YhInterfaceResult> CancelAsync(string jylsh)
+        {
+            if (!_initialized)
+                return YhInterfaceResult.Fail("组件尚未初始化，请先调用 InitializeAsync");
+
+            return await Task.Run(() =>
+            {
+                lock (_lock)
+                {
+                    try
+                    {
+                        object appCode = new object();
+                        object appMsg = new object();
+
+                        _comInstance.yh_interface_cancel(jylsh, ref appCode, ref appMsg);
+                        return YhInterfaceResult.Success(appCode, appMsg);
+                    }
+                    catch (Exception ex)
+                    {
+                        return YhInterfaceResult.Fail($"取消失败: {ex.Message}");
                     }
                 }
             });
