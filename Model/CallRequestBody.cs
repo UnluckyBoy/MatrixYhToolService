@@ -25,8 +25,20 @@
         public string? cardName { get; set; }//身份证姓名
         /**03交易参数**/
 
+        /**42参数：个人编码、操作员编码、操作员由上取**/
+        public string? regisNum { get; set; }//就诊编号
+        public string? clearingCenter { get; set; }//分中心编码
+        public string? settlementType { get; set; }//支付类别
+        public string? settlementNum { get; set; }//结算编号
+        public string? opreatorTime { get; set; }//经办时间
+        public string? fallbackReasons { get; set; }//回退原因
+        public string? insuranceMethod { get; set; }//执行社会保险办法
+        /**42参数**/
+
 
         public string? jylsh { get; set; }
         public string? jyyzm { get; set; }
+
+        
     }
 }

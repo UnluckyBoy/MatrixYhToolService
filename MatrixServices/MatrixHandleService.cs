@@ -1,5 +1,6 @@
 ﻿using MatrixYhToolService.MatrixTool;
 using MatrixYhToolService.Model;
+using Microsoft.AspNetCore.JsonPatch.Internal;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System.Xml;
@@ -38,6 +39,8 @@ namespace MatrixYhToolService.MatrixServices
             {
                 case "03":
                     return await Submit03Call(request);
+                case "42":
+                    return await Submit42Call(request);
                 case "47":
                     return await Submit47Call(request);
                 default:
@@ -46,6 +49,11 @@ namespace MatrixYhToolService.MatrixServices
             }
         }
 
+        /// <summary>
+        /// 03交易
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns></returns>
         private async Task<MatrixWebResponse> Submit03Call(CallRequestBody request)
         {
             var parameters = new Dictionary<string, string>
@@ -98,6 +106,47 @@ namespace MatrixYhToolService.MatrixServices
             return MatrixWebResponse.Failure(result);
         }
 
+        
+        /// <summary>
+        /// 42回退交易
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns></returns>
+        private async Task<MatrixWebResponse> Submit42Call(CallRequestBody request)
+        {
+            MatrixLogHelper.LogInformation($"生成的{request.callNum}交易入参请求");
+            var parameters = new Dictionary<string, string>
+            {
+                ["regisNum"] = request.regisNum,
+                ["clearingCenter"] = request.clearingCenter,
+                ["settlementType"] = request.settlementType,
+                ["settlementNum"] = request.settlementNum,
+                ["operatorId"] = request.operatorId,
+                ["operatorName"] = request.operatorName,
+                ["opreatorTime"] = request.opreatorTime,
+                ["fallbackReasons"] = MatrixStringTool.checkStr(request.fallbackReasons, "门诊回退单边账"),
+                ["insuranceMethod"] = request.insuranceMethod,
+                ["pCode"] = request.pCode
+            };
+            string tempXmlParameter = MatrixXmlTemplate.GenerateXml(request.callNum, parameters);
+            MatrixLogHelper.LogInformation($"生成的{request.callNum}交易入参：\n{tempXmlParameter}");
+
+            var result = await _yhHelper.CallAsync(request.callNum, tempXmlParameter);
+
+            MatrixLogHelper.LogInformation($"{request.callNum}交易反参：\n{result.OutputXml}");
+
+            if (result.AppCode != null && Convert.ToInt32(result.AppCode) > 0)
+            {
+                return MatrixWebResponse.Success(result.OutputXml);
+            }
+            else
+            {
+                return MatrixWebResponse.Failure(result.OutputXml);
+            }
+
+            //return MatrixWebResponse.Failure();
+        }
+
         /// <summary>
         /// 47交易请求
         /// </summary>
@@ -136,15 +185,18 @@ namespace MatrixYhToolService.MatrixServices
             // 4.调用 COM 组件
             var result = await _yhHelper.CallAsync(request.callNum, tempXmlParameter);
 
+            MatrixLogHelper.LogInformation($"{request.callNum}交易反参：\n{result.OutputXml}");
+
             // 5.处理返回结果
             if (result.AppCode != null && Convert.ToInt32(result.AppCode) > 0)
             {
                 if (!File.Exists(outputFilePath))
                 {
-                    MatrixLogHelper.LogWarning("文件不存在：{FilePath}", outputFilePath);
+                    MatrixLogHelper.LogWarning($"文件不存在：{outputFilePath}");
                     return MatrixWebResponse.Failure(null, "文件不存在");
                 }
 
+                MatrixLogHelper.LogInformation($"解析文件：{outputFilePath}");
                 var parsedData = await MatrixCommoFileTool.ReadTxtAsync(outputFilePath);
                 if (parsedData != null)
                 {

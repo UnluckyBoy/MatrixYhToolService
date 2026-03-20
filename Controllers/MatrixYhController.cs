@@ -11,12 +11,10 @@ namespace MatrixYhToolService.Controllers
     public class MatrixYhController : ControllerBase
     {
         private readonly MatrixHandleService _handleService;
-        //private readonly ILogger<MatrixYhController> _logger;
 
         // ILogger<MatrixYhController> logger, 
         public MatrixYhController(MatrixHandleService matrixHandleService)
         {
-            //_logger = logger;
             _handleService= matrixHandleService;
         }
 
@@ -55,7 +53,6 @@ namespace MatrixYhToolService.Controllers
         public async Task<MatrixWebResponse> GetSubmit([FromBody] CallRequestBody request)
         {
             // 使用 ILogger 打印入参
-            //_logger.LogInformation("收到 GetSubmit 请求：request={request}", request.ToString());
             MatrixLogHelper.LogInformation("收到 GetSubmit 请求：request={request}", request.ToString());
             return await _handleService.GetSubmitCall(request);
         }

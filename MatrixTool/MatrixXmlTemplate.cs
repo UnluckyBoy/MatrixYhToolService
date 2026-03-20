@@ -26,6 +26,19 @@
                     <cardid>{cardid}</cardid>
                     <cardname>{cardname}</cardname>
                 </input>",
+            ["42"] = @"<?xml version=""1.0"" encoding=""GBK"" standalone=""yes"" ?>
+                <input>
+                    <prm_akc190>{regisNum}</prm_akc190>
+                    <prm_yab003>{clearingCenter}</prm_yab003>
+                    <prm_aka130>{settlementType}</prm_aka130>
+                    <prm_yka103>{settlementNum}</prm_yka103>
+                    <prm_aae011>{operatorId}</prm_aae011>
+                    <prm_ykc141>{operatorName}</prm_ykc141>
+                    <prm_aae036>{opreatorTime}</prm_aae036>
+                    <prm_aae013>{fallbackReasons}</prm_aae013>
+                    <prm_ykb065>{insuranceMethod}</prm_ykb065>
+                    <prm_aac001>{pCode}</prm_aac001>
+                </input>",
             ["OTHER_ORG_CODE"] = @"<?xml version=""1.0"" encoding=""GBK"" standalone=""yes"" ?>
                 <input>
                     <field1>{orgCode}</field1>
@@ -51,8 +64,7 @@
             if (XmlTemplates.TryGetValue(callNum, out var template))
                 return template;
 
-            // 如果找不到，记录日志（可选）并返回默认模板
-            // 可以通过依赖注入 ILogger，但静态类中不方便，可根据实际情况处理
+            //MatrixLogHelper.LogWarning($"Xml模板匹配：{XmlTemplates[DefaultTemplateKey]}");//打印日志
             return XmlTemplates[DefaultTemplateKey];
         }
 
