@@ -39,6 +39,15 @@
                     <prm_ykb065>{insuranceMethod}</prm_ykb065>
                     <prm_aac001>{pCode}</prm_aac001>
                 </input>",
+            ["44"] = @"<?xml version=""1.0"" encoding=""GBK"" standalone=""yes"" ?>
+                <input>
+                    <prm_akc190>{regisNum}</prm_akc190>
+                    <prm_yab003>{clearingCenter}</prm_yab003>
+                    <prm_aka130>{settlementType}</prm_aka130>
+                    <prm_akc021></prm_akc021>
+                    <prm_yka103>{settlementNum}</prm_yka103>
+                    <prm_ykb065>{insuranceMethod}</prm_ykb065>
+                </input>",
             ["OTHER_ORG_CODE"] = @"<?xml version=""1.0"" encoding=""GBK"" standalone=""yes"" ?>
                 <input>
                     <field1>{orgCode}</field1>

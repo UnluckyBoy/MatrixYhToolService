@@ -41,6 +41,8 @@ namespace MatrixYhToolService.MatrixServices
                     return await Submit03Call(request);
                 case "42":
                     return await Submit42Call(request);
+                case "44":
+                    return await Submit44Call(request);
                 case "47":
                     return await Submit47Call(request);
                 default:
@@ -145,6 +147,34 @@ namespace MatrixYhToolService.MatrixServices
             }
 
             //return MatrixWebResponse.Failure();
+        }
+
+        private async Task<MatrixWebResponse> Submit44Call(CallRequestBody request)
+        {
+            MatrixLogHelper.LogInformation($"生成的{request.callNum}交易入参请求");
+            var parameters = new Dictionary<string, string>
+            {
+                ["regisNum"] = request.regisNum,
+                ["clearingCenter"] = request.clearingCenter,
+                ["settlementType"] = request.settlementType,
+                ["settlementNum"] = request.settlementNum,
+                ["insuranceMethod"] = request.insuranceMethod
+            };
+            string tempXmlParameter = MatrixXmlTemplate.GenerateXml(request.callNum, parameters);
+            MatrixLogHelper.LogInformation($"生成的{request.callNum}交易入参：\n{tempXmlParameter}");
+
+            var result = await _yhHelper.CallAsync(request.callNum, tempXmlParameter);
+
+            MatrixLogHelper.LogInformation($"{request.callNum}交易反参：\n{result.OutputXml}");
+
+            if (result.AppCode != null && Convert.ToInt32(result.AppCode) > 0)
+            {
+                return MatrixWebResponse.Success(result.OutputXml);
+            }
+            else
+            {
+                return MatrixWebResponse.Failure(result.OutputXml);
+            }
         }
 
         /// <summary>
