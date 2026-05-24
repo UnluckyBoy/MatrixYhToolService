@@ -12,6 +12,13 @@
                     <prm_aac001>{pCode}</prm_aac001>
                     <prm_outputfile>{outputFilePath}</prm_outputfile>
                 </input>",
+            ["H28b"] = @"<?xml version=""1.0"" encoding=""GBK"" standalone=""yes"" ?>
+                <input>
+                    <prm_begindate>{beginDate}</prm_begindate>
+                    <prm_enddate>{endDate}</prm_enddate>
+                    <prm_akb020>{orgCode}</prm_akb020>
+                    <prm_outputfile>{outputFilePath}</prm_outputfile>
+                </input>",
             ["03"] = @"<?xml version=""1.0"" encoding=""GBK"" standalone=""yes"" ?>
                 <input>
                     <prm_payoptype>{prm_payoptype}</prm_payoptype>

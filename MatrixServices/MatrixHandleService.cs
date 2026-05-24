@@ -1,9 +1,6 @@
 ﻿using MatrixYhToolService.MatrixTool;
 using MatrixYhToolService.Model;
-using Microsoft.AspNetCore.JsonPatch.Internal;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using System.Xml;
 
 namespace MatrixYhToolService.MatrixServices
 {
@@ -32,10 +29,9 @@ namespace MatrixYhToolService.MatrixServices
         /// <returns></returns>
         public async Task<MatrixWebResponse> GetSubmitCall(CallRequestBody request)
         {
-            //_logger.LogInformation($"GetSubmitCall 开始处理请求：{request
             MatrixLogHelper.LogInformation($"GetSubmitCall 开始处理请求：{request}");
-
-            switch (request.callNum?.ToLower())
+            //switch (request.callNum?.ToLower())
+            switch (request.callNum)
             {
                 case "03":
                     return await Submit03Call(request);
@@ -45,6 +41,8 @@ namespace MatrixYhToolService.MatrixServices
                     return await Submit44Call(request);
                 case "47":
                     return await Submit47Call(request);
+                case "H28b":
+                    return await SubmitH28bCall(request);
                 default:
                     MatrixLogHelper.LogWarning($"未知交易号：{request.callNum}");
                     return MatrixWebResponse.Failure(null, $"不支持的调用类型: {request.callNum}");
@@ -108,9 +106,9 @@ namespace MatrixYhToolService.MatrixServices
             return MatrixWebResponse.Failure(result);
         }
 
-        
+
         /// <summary>
-        /// 42回退交易
+        /// 42交易-回退
         /// </summary>
         /// <param name="request"></param>
         /// <returns></returns>
@@ -178,13 +176,13 @@ namespace MatrixYhToolService.MatrixServices
         }
 
         /// <summary>
-        /// 47交易请求
+        /// 47交易-医保统计
         /// </summary>
         /// <param name="request"></param>
         /// <returns></returns>
         private async Task<MatrixWebResponse> Submit47Call(CallRequestBody request)
         {
-            // 1.准备文件路径
+            // 准备文件路径
             string contentRootPath = _env.ContentRootPath;
             var call47Path = _configuration["FileStorage:Call47Path"];
             var tempFolderPath = Path.Combine(contentRootPath, MatrixStringTool.checkStr(call47Path, "Call47"));
@@ -196,10 +194,7 @@ namespace MatrixYhToolService.MatrixServices
             string tempFileName = $"{timestamp}.txt";
             string outputFilePath = Path.Combine(tempFolderPath, tempFileName);
 
-            // 2.确定机构编码（默认 H52263200141）
-            // string tempOrgCode = MatrixStringTool.checkStr(request.orgCode, "H52263200141");
-
-            // 3.生成 XML 参数（已扩展支持 callNum 参数）
+            // 生成 XML 参数
             var parameters = new Dictionary<string, string>
             {
                 ["orgCode"] = MatrixStringTool.checkStr(request.orgCode, tempOrgCode),
@@ -212,12 +207,12 @@ namespace MatrixYhToolService.MatrixServices
 
             MatrixLogHelper.LogInformation($"生成的{request.callNum}交易入参：\n{tempXmlParameter}");
 
-            // 4.调用 COM 组件
+            // 调用 COM 组件
             var result = await _yhHelper.CallAsync(request.callNum, tempXmlParameter);
 
             MatrixLogHelper.LogInformation($"{request.callNum}交易反参：\n{result.OutputXml}");
 
-            // 5.处理返回结果
+            // 处理返回结果
             if (result.AppCode != null && Convert.ToInt32(result.AppCode) > 0)
             {
                 if (!File.Exists(outputFilePath))
@@ -249,6 +244,73 @@ namespace MatrixYhToolService.MatrixServices
                 }
             }
 
+            return MatrixWebResponse.Failure(result);
+        }
+
+
+        /// <summary>
+        /// H28b交易-入院时间查询入出院信息(含异地)
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns></returns>
+        private async Task<MatrixWebResponse> SubmitH28bCall(CallRequestBody request)
+        {
+            // 准备文件路径
+            string contentRootPath = _env.ContentRootPath;
+            var call47Path = _configuration["FileStorage:Call47Path"];
+            var tempFolderPath = Path.Combine(contentRootPath, MatrixStringTool.checkStr(call47Path, "Call47"));
+
+            if (!Directory.Exists(tempFolderPath))
+                Directory.CreateDirectory(tempFolderPath);
+
+            string timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss_fff");
+            string tempFileName = $"{timestamp}.txt";
+            string outputFilePath = Path.Combine(tempFolderPath, tempFileName);
+
+            // 生成 XML 参数
+            var parameters = new Dictionary<string, string>
+            {
+                ["orgCode"] = MatrixStringTool.checkStr(request.orgCode, tempOrgCode),
+                ["beginDate"] = request.beginDate,
+                ["endDate"] = request.endDate,
+                ["outputFilePath"] = outputFilePath
+            };
+            string tempXmlParameter = MatrixXmlTemplate.GenerateXml(request.callNum, parameters);
+
+            MatrixLogHelper.LogInformation($"生成的{request.callNum}交易入参：\n{tempXmlParameter}");
+            var result = await _yhHelper.CallAsync(request.callNum, tempXmlParameter);
+            MatrixLogHelper.LogInformation($"{request.callNum}交易反参：\n{result.OutputXml}");
+            // 处理返回结果
+            if (result.AppCode != null && Convert.ToInt32(result.AppCode) > 0)
+            {
+                if (!File.Exists(outputFilePath))
+                {
+                    MatrixLogHelper.LogWarning($"文件不存在：{outputFilePath}");
+                    return MatrixWebResponse.Failure(null, "文件不存在");
+                }
+
+                MatrixLogHelper.LogInformation($"解析文件：{outputFilePath}");
+                var parsedData = await MatrixCommoFileTool.ReadTxtAsync(outputFilePath);
+                if (parsedData != null)
+                {
+                    try
+                    {
+                        File.Delete(outputFilePath);
+                        MatrixLogHelper.LogInformation("文件已删除：{FilePath}", outputFilePath);
+                        return MatrixWebResponse.Success(parsedData);
+                    }
+                    catch (Exception ex)
+                    {
+                        MatrixLogHelper.LogError(ex, "删除文件失败：{FilePath}", outputFilePath);
+                        return MatrixWebResponse.Failure(result);
+                    }
+                }
+                else
+                {
+                    MatrixLogHelper.LogInformation("文件内容为空，不删除文件：{FilePath}", outputFilePath);
+                    return MatrixWebResponse.Failure("文件内容为空");
+                }
+            }
             return MatrixWebResponse.Failure(result);
         }
     }
