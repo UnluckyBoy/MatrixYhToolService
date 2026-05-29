@@ -43,6 +43,8 @@ namespace MatrixYhToolService.MatrixServices
                     return await Submit47Call(request);
                 case "H28b":
                     return await SubmitH28bCall(request);
+                case "H7103":
+                    return await SubmitH7103Call(request);
                 default:
                     MatrixLogHelper.LogWarning($"未知交易号：{request.callNum}");
                     return MatrixWebResponse.Failure(null, $"不支持的调用类型: {request.callNum}");
@@ -147,6 +149,44 @@ namespace MatrixYhToolService.MatrixServices
             //return MatrixWebResponse.Failure();
         }
 
+        /// <summary>
+        /// H7103交易-冲正交易
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns></returns>
+        private async Task<MatrixWebResponse> SubmitH7103Call(CallRequestBody request)
+        {
+            MatrixLogHelper.LogInformation($"生成的{request.callNum}交易入参请求");
+            var parameters = new Dictionary<string, string>
+            {
+                ["regisNum"] = request.regisNum,
+                ["pCode"] = request.pCode,
+                ["regisNum"] = request.regisNum,
+                ["settlementNum"] = request.settlementNum,
+                ["omsgId"] = request.omsgId
+            };
+            string tempXmlParameter = MatrixXmlTemplate.GenerateXml(request.callNum, parameters);
+            MatrixLogHelper.LogInformation($"生成的{request.callNum}交易入参：\n{tempXmlParameter}");
+
+            var result = await _yhHelper.CallAsync(request.callNum, tempXmlParameter);
+
+            MatrixLogHelper.LogInformation($"{request.callNum}交易反参：\n{result.OutputXml}");
+
+            if (result.AppCode != null && Convert.ToInt32(result.AppCode) > 0)
+            {
+                return MatrixWebResponse.Success(result.OutputXml);
+            }
+            else
+            {
+                return MatrixWebResponse.Failure(result.OutputXml);
+            }
+        }
+
+        /// <summary>
+        /// 44交易-医保结算单打印
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns></returns>
         private async Task<MatrixWebResponse> Submit44Call(CallRequestBody request)
         {
             MatrixLogHelper.LogInformation($"生成的{request.callNum}交易入参请求");
@@ -222,7 +262,7 @@ namespace MatrixYhToolService.MatrixServices
                 }
 
                 MatrixLogHelper.LogInformation($"解析文件：{outputFilePath}");
-                var parsedData = await MatrixCommoFileTool.ReadTxtAsync(outputFilePath);
+                var parsedData = await MatrixCommoFileTool.Read47TxtAsync(outputFilePath);
                 if (parsedData != null)
                 {
                     try
@@ -290,7 +330,7 @@ namespace MatrixYhToolService.MatrixServices
                 }
 
                 MatrixLogHelper.LogInformation($"解析文件：{outputFilePath}");
-                var parsedData = await MatrixCommoFileTool.ReadTxtAsync(outputFilePath);
+                var parsedData = await MatrixCommoFileTool.ReadH28bTxtAsync(outputFilePath);
                 if (parsedData != null)
                 {
                     try

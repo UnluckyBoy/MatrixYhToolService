@@ -27,7 +27,43 @@ namespace MatrixYhToolService.MatrixTool
         /// </summary>
         /// <param name="filePath"></param>
         /// <returns></returns>
-        public static async Task<List<Dictionary<string, string>>> ReadTxtAsync(string filePath)
+        public static async Task<List<Dictionary<string, string>>> Read47TxtAsync(string filePath)
+        {
+            // 读取文件内容并解析（使用 GBK 编码）
+            var lines = await System.IO.File.ReadAllLinesAsync(filePath, Encoding.GetEncoding("GBK"));
+
+            var parsedData = new List<Dictionary<string, string>>();
+            foreach (var line in lines)
+            {
+                if (string.IsNullOrWhiteSpace(line)) continue;
+
+                var columns = line.Split('\t', StringSplitOptions.None); // 按制表符分割，保留空列
+                var rowDict = new Dictionary<string, string>();
+
+                // 自动生成列名：Column1, Column2, ...
+                for (int i = 0; i < columns.Length; i++)
+                {
+                    //string key = $"Column{i + 1}";
+                    string key;
+                    if (i < call47ColumnKeys.Length)
+                    {
+                        key = call47ColumnKeys[i];
+                    }
+                    else
+                    {
+                        key = $"Column{i + 1}";
+                    }
+                    rowDict[key] = columns[i];
+                }
+
+                parsedData.Add(rowDict);
+            }
+
+            return parsedData;
+        }
+
+
+        public static async Task<List<Dictionary<string, string>>> ReadH28bTxtAsync(string filePath)
         {
             // 读取文件内容并解析（使用 GBK 编码）
             var lines = await System.IO.File.ReadAllLinesAsync(filePath, Encoding.GetEncoding("GBK"));

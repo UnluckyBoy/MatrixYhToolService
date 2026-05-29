@@ -35,6 +35,9 @@
         public string? insuranceMethod { get; set; }//执行社会保险办法
         /**42参数**/
 
+        /**H7103参数**/
+        public string? omsgId { get; set; }//医保报文ID
+
 
         public string? jylsh { get; set; }
         public string? jyyzm { get; set; }

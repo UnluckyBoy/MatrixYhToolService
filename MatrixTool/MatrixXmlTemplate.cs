@@ -46,6 +46,13 @@
                     <prm_ykb065>{insuranceMethod}</prm_ykb065>
                     <prm_aac001>{pCode}</prm_aac001>
                 </input>",
+            ["H7103"] = @"<?xml version=""1.0"" encoding=""GBK"" standalone=""yes"" ?>
+                <input>
+                    <prm_aac001>{pCode}</prm_aac001>
+                    <prm_akc190>{regisNum}</prm_akc190>
+                    <prm_yka103>{settlementNum}</prm_yka103>
+                    <omsgid>{omsgId}</omsgid>
+                </input>",
             ["44"] = @"<?xml version=""1.0"" encoding=""GBK"" standalone=""yes"" ?>
                 <input>
                     <prm_akc190>{regisNum}</prm_akc190>
