@@ -8,7 +8,7 @@ namespace MatrixYhToolService.MatrixTool
     /// </summary>
     public class MatrixCommoFileTool
     {
-        // 预定义47交易列表
+        // 47交易列表
         private static readonly string[] call47ColumnKeys = new[]
         {
             "pCode", "pPayAmount", "costTotal", "selfAmount", "payHookAmount", "rangeAmount",
@@ -20,6 +20,15 @@ namespace MatrixYhToolService.MatrixTool
             "hmCompensation", "consoleCompensation", "otherFunds", "medicalVisitType",
             "diseaseCode", "diseaseName", "insuranceCode", "pIdNum", "specialType",
             "settlementMsgId", "insuranceWalletPayAmount"
+        };
+
+        private static readonly string[] callH28bColumnKeys = new[]
+        {
+            "regisNum", "pCode", "pName", "pGend", "payType", "inHosStatus",
+            "medicalRecordNum", "inHosNum", "inHosDate", "inHosDiagnosis",
+            "inHosDepartment", "inHosBedNum", "inHosOpreator", "inHosOpreatDate", "outHosReason",
+            "outHosDate", "outHosDiagnosis", "outHosDepartment", "outHosBedNum", "outHosOpreator",
+            "outHosOpreatDate", "remark","insuranceMethod"
         };
 
         /// <summary>
@@ -81,9 +90,9 @@ namespace MatrixYhToolService.MatrixTool
                 {
                     //string key = $"Column{i + 1}";
                     string key;
-                    if (i < call47ColumnKeys.Length)
+                    if (i < callH28bColumnKeys.Length)
                     {
-                        key = call47ColumnKeys[i];
+                        key = callH28bColumnKeys[i];
                     }
                     else
                     {
