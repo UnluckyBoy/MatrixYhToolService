@@ -33,6 +33,14 @@
                     <cardid>{cardid}</cardid>
                     <cardname>{cardname}</cardname>
                 </input>",
+            ["22"] = @"<?xml version=""1.0"" encoding=""GBK"" standalone=""yes"" ?>
+                <input>
+                    <prm_akc190>{regisNum}</prm_akc190>
+                    <prm_aac001>{pCode}</prm_aac001>
+                    <prm_aka130>{settlementType}</prm_aka130>
+                    <prm_yab003>{clearingCenter}</prm_yab003>
+                    <prm_ykb065>{insuranceMethod}</prm_ykb065>
+                </input>",
             ["42"] = @"<?xml version=""1.0"" encoding=""GBK"" standalone=""yes"" ?>
                 <input>
                     <prm_akc190>{regisNum}</prm_akc190>

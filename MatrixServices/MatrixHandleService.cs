@@ -35,6 +35,8 @@ namespace MatrixYhToolService.MatrixServices
             {
                 case "03":
                     return await Submit03Call(request);
+                case "22":
+                    return await Submit22Call(request);
                 case "42":
                     return await Submit42Call(request);
                 case "44":
@@ -108,6 +110,39 @@ namespace MatrixYhToolService.MatrixServices
             return MatrixWebResponse.Failure(result);
         }
 
+        /// <summary>
+        /// 22交易接口-入院办理回退
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns></returns>
+        private async Task<MatrixWebResponse> Submit22Call(CallRequestBody request)
+        {
+            MatrixLogHelper.LogInformation($"生成的{request.callNum}交易入参请求");
+            var parameters = new Dictionary<string, string>
+            {
+                ["regisNum"] = request.regisNum,
+                ["pCode"] = request.pCode,
+                ["settlementType"] = request.settlementType,
+                ["clearingCenter"] = request.clearingCenter,
+                ["insuranceMethod"] = request.insuranceMethod
+            };
+            string tempXmlParameter = MatrixXmlTemplate.GenerateXml(request.callNum, parameters);
+            MatrixLogHelper.LogInformation($"生成的{request.callNum}交易入参：\n{tempXmlParameter}");
+
+            var result = await _yhHelper.CallAsync(request.callNum, tempXmlParameter);
+
+            MatrixLogHelper.LogInformation($"{request.callNum}交易反参：\n{result.OutputXml}");
+
+            if (result.AppCode != null && Convert.ToInt32(result.AppCode) > 0)
+            {
+                return MatrixWebResponse.Success(result.OutputXml);
+            }
+            else
+            {
+                return MatrixWebResponse.Failure(result.OutputXml);
+            }
+        }
+
 
         /// <summary>
         /// 42交易-回退
@@ -145,8 +180,6 @@ namespace MatrixYhToolService.MatrixServices
             {
                 return MatrixWebResponse.Failure(result.OutputXml);
             }
-
-            //return MatrixWebResponse.Failure();
         }
 
         /// <summary>
