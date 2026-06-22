@@ -38,6 +38,10 @@
         /**H7103参数**/
         public string? omsgId { get; set; }//医保报文ID
 
+        /**H7106参数**/
+        public string? mdtrtarea_admdvs { get; set; }//就医地医保区划
+        public string? insuplc_admdvs { get; set; }//参保地医保区划
+
 
         public string? jylsh { get; set; }
         public string? jyyzm { get; set; }

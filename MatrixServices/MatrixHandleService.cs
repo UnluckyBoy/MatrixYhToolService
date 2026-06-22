@@ -47,6 +47,8 @@ namespace MatrixYhToolService.MatrixServices
                     return await SubmitH28bCall(request);
                 case "H7103":
                     return await SubmitH7103Call(request);
+                case "H7106":
+                    return await SubmitH7106Call(request);
                 default:
                     MatrixLogHelper.LogWarning($"未知交易号：{request.callNum}");
                     return MatrixWebResponse.Failure(null, $"不支持的调用类型: {request.callNum}");
@@ -216,6 +218,41 @@ namespace MatrixYhToolService.MatrixServices
         }
 
         /// <summary>
+        /// H7106-异地冲正交易
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns></returns>
+        private async Task<MatrixWebResponse> SubmitH7106Call(CallRequestBody request)
+        {
+            MatrixLogHelper.LogInformation($"生成的{request.callNum}交易入参请求");
+            var parameters = new Dictionary<string, string>
+            {
+                ["mdtrtarea_admdvs"] = request.mdtrtarea_admdvs,
+                ["insuplc_admdvs"] = request.insuplc_admdvs,
+                ["sender_msg_id>"] = request.omsgId,
+                ["settlementType"] = request.settlementType,
+                ["pCode"] = request.pCode,
+                ["regisNum"] = request.regisNum,
+                ["settlementNum"] = request.settlementNum
+            };
+            string tempXmlParameter = MatrixXmlTemplate.GenerateXml(request.callNum, parameters);
+            MatrixLogHelper.LogInformation($"生成的{request.callNum}交易入参：\n{tempXmlParameter}");
+
+            var result = await _yhHelper.CallAsync(request.callNum, tempXmlParameter);
+
+            MatrixLogHelper.LogInformation($"{request.callNum}交易反参：\n{result.OutputXml}");
+
+            if (result.AppCode != null && Convert.ToInt32(result.AppCode) > 0)
+            {
+                return MatrixWebResponse.Success(result.OutputXml);
+            }
+            else
+            {
+                return MatrixWebResponse.Failure(result.OutputXml);
+            }
+        }
+
+        /// <summary>
         /// 44交易-医保结算单打印
         /// </summary>
         /// <param name="request"></param>
@@ -282,12 +319,16 @@ namespace MatrixYhToolService.MatrixServices
 
             // 调用 COM 组件
             var result = await _yhHelper.CallAsync(request.callNum, tempXmlParameter);
-
-            MatrixLogHelper.LogInformation($"{request.callNum}交易反参：\n{result.OutputXml}");
-
             // 处理返回结果
-            if (result.AppCode != null && Convert.ToInt32(result.AppCode) > 0)
+            if (result.AppCode == null || Convert.ToInt32(result.AppCode) <= 0)
             {
+                MatrixLogHelper.LogInformation($"{request.callNum}-交易反参：\n{result.AppMsg}");//写入日志
+                return MatrixWebResponse.Failure(result);
+            }
+            else /*(result.AppCode != null && Convert.ToInt32(result.AppCode) > 0)*/
+            {
+                MatrixLogHelper.LogInformation($"{request.callNum}-交易反参：\n{result.OutputXml}");//写入日志
+
                 if (!File.Exists(outputFilePath))
                 {
                     MatrixLogHelper.LogWarning($"文件不存在：{outputFilePath}");
@@ -301,12 +342,12 @@ namespace MatrixYhToolService.MatrixServices
                     try
                     {
                         File.Delete(outputFilePath);
-                        MatrixLogHelper.LogInformation("文件已删除：{FilePath}", outputFilePath);
+                        MatrixLogHelper.LogInformation($"文件已删除：{outputFilePath}");
                         return MatrixWebResponse.Success(parsedData);
                     }
                     catch (Exception ex)
                     {
-                        MatrixLogHelper.LogError(ex, "删除文件失败：{FilePath}", outputFilePath);
+                        MatrixLogHelper.LogError(ex, $"删除文件失败：{outputFilePath}");
                         return MatrixWebResponse.Failure(result);
                     }
                 }
@@ -316,8 +357,6 @@ namespace MatrixYhToolService.MatrixServices
                     return MatrixWebResponse.Failure("文件内容为空");
                 }
             }
-
-            return MatrixWebResponse.Failure(result);
         }
 
 

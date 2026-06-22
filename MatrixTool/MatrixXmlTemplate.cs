@@ -61,6 +61,17 @@
                     <prm_yka103>{settlementNum}</prm_yka103>
                     <omsgid>{omsgId}</omsgid>
                 </input>",
+            ["H7106"] = @"<?xml version=""1.0"" encoding=""GBK"" standalone=""yes"" ?>
+                <input>
+                    <mdtrtarea_admdvs>{mdtrtarea_admdvs}</mdtrtarea_admdvs>
+                    <insuplc_admdvs>{insuplc_admdvs}</insuplc_admdvs>
+                    <sender_msg_id>{sender_msg_id}</sender_msg_id>
+                    <aka130>{settlementType}</aka130>
+                    <aac001>{pCode}</aac001>
+                    <akc190>{regisNum}</akc190>
+                    <yka103>{settlementNum}</yka103>
+                    <prm_yabtch></prm_yabtch>
+                </input>",
             ["44"] = @"<?xml version=""1.0"" encoding=""GBK"" standalone=""yes"" ?>
                 <input>
                     <prm_akc190>{regisNum}</prm_akc190>
