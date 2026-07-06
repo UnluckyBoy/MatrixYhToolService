@@ -198,7 +198,9 @@ namespace MatrixYhToolService.MatrixServices
                 ["pCode"] = request.pCode,
                 ["regisNum"] = request.regisNum,
                 ["settlementNum"] = request.settlementNum,
-                ["omsgId"] = request.omsgId
+                ["omsgId"] = request.omsgId,
+                ["operatorId"] = request.operatorId,
+                ["operatorName"] = request.operatorName
             };
             string tempXmlParameter = MatrixXmlTemplate.GenerateXml(request.callNum, parameters);
             MatrixLogHelper.LogInformation($"生成的{request.callNum}交易入参：\n{tempXmlParameter}");
@@ -233,7 +235,9 @@ namespace MatrixYhToolService.MatrixServices
                 ["settlementType"] = request.settlementType,
                 ["pCode"] = request.pCode,
                 ["regisNum"] = request.regisNum,
-                ["settlementNum"] = request.settlementNum
+                ["settlementNum"] = request.settlementNum,
+                ["operatorId"] = request.operatorId,
+                ["operatorName"] = request.operatorName
             };
             string tempXmlParameter = MatrixXmlTemplate.GenerateXml(request.callNum, parameters);
             MatrixLogHelper.LogInformation($"生成的{request.callNum}交易入参：\n{tempXmlParameter}");

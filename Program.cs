@@ -66,7 +66,7 @@ builder.Host.UseSerilog((context, loggerConfig) =>
         Directory.CreateDirectory(directory);
     }
 
-    loggerConfig.ReadFrom.Configuration(context.Configuration)   //从 appsettings.json 读取配置
+    loggerConfig.ReadFrom.Configuration(context.Configuration) // 从appsettings.json读取配置
                 .MinimumLevel.Information()
                 .WriteTo.File(logPath,
                     rollingInterval: RollingInterval.Day, // 每天滚动一次

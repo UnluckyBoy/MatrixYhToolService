@@ -60,6 +60,8 @@
                     <prm_akc190>{regisNum}</prm_akc190>
                     <prm_yka103>{settlementNum}</prm_yka103>
                     <omsgid>{omsgId}</omsgid>
+                    <prm_aae011>{operatorId}</prm_aae011>
+                    <prm_ykc141>{operatorName}</prm_ykc141>
                 </input>",
             ["H7106"] = @"<?xml version=""1.0"" encoding=""GBK"" standalone=""yes"" ?>
                 <input>
@@ -70,6 +72,8 @@
                     <aac001>{pCode}</aac001>
                     <akc190>{regisNum}</akc190>
                     <yka103>{settlementNum}</yka103>
+                    <prm_aae011>{operatorId}</prm_aae011>
+                    <prm_ykc141>{operatorName}</prm_ykc141>
                     <prm_yabtch></prm_yabtch>
                 </input>",
             ["44"] = @"<?xml version=""1.0"" encoding=""GBK"" standalone=""yes"" ?>
