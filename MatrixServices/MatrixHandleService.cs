@@ -231,7 +231,7 @@ namespace MatrixYhToolService.MatrixServices
             {
                 ["mdtrtarea_admdvs"] = request.mdtrtarea_admdvs,
                 ["insuplc_admdvs"] = request.insuplc_admdvs,
-                ["sender_msg_id>"] = request.omsgId,
+                ["sender_msg_id"] = request.omsgId,
                 ["settlementType"] = request.settlementType,
                 ["pCode"] = request.pCode,
                 ["regisNum"] = request.regisNum,
