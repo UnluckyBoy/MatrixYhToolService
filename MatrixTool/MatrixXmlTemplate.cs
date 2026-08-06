@@ -85,6 +85,11 @@
                     <prm_yka103>{settlementNum}</prm_yka103>
                     <prm_ykb065>{insuranceMethod}</prm_ykb065>
                 </input>",
+            ["91ANew"] = @"<?xml version=""1.0"" encoding=""GBK"" standalone=""yes"" ?>
+                <input>
+                    <prm_aaalsh>{downloadNum}</prm_aaalsh>
+                    <prm_outputfile>{outputFilePath}</prm_outputfile>
+                </input>",
             ["OTHER_ORG_CODE"] = @"<?xml version=""1.0"" encoding=""GBK"" standalone=""yes"" ?>
                 <input>
                     <field1>{orgCode}</field1>

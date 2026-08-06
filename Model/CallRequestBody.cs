@@ -46,6 +46,7 @@
         public string? jylsh { get; set; }
         public string? jyyzm { get; set; }
 
-        
+
+        public string? downloadNum;//91A下载流水号
     }
 }
