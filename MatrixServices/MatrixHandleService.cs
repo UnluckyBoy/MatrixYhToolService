@@ -484,6 +484,7 @@ namespace MatrixYhToolService.MatrixServices
                 MatrixLogHelper.LogInformation($"解析文件：{outputFilePath}");
 
                 //var parsedData = await MatrixCommoFileTool.Read91ANewTxtAsync(outputFilePath);
+                List<Dictionary<string, string>> resultData= new List<Dictionary<string, string>>();
                 var parsedData = await MatrixCommoFileTool.ReadTxtAsync(outputFilePath, request.callNum);
                 if (parsedData != null)
                 {
@@ -498,6 +499,7 @@ namespace MatrixYhToolService.MatrixServices
                     //    MatrixLogHelper.LogError(ex, $"删除文件失败：{outputFilePath}");
                     //    return MatrixWebResponse.Failure(result);
                     //}
+                    resultData = parsedData;
                     return MatrixWebResponse.Success(parsedData.Count);
                 }
                 else

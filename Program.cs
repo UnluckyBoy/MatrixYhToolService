@@ -58,7 +58,7 @@ builder.Host.UseSerilog((context, loggerConfig) =>
     {
         logDir = "Logs"; // 默认
     }
-    var logPath = Path.Combine(context.HostingEnvironment.ContentRootPath, logDir, "log.txt");
+    var logPath = Path.Combine(context.HostingEnvironment.ContentRootPath, logDir, "log-.txt");
     // 确保目录存在
     var directory = Path.GetDirectoryName(logPath);
     if (!string.IsNullOrEmpty(directory))
