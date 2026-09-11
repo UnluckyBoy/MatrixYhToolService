@@ -41,8 +41,8 @@ namespace MatrixYhToolService.MatrixServices
                     return await Submit22Call(request);
                 case "42":
                     return await Submit42Call(request);
-                case "44":
-                    return await Submit44Call(request);
+                //case "44":
+                //    return await Submit44Call(request);
                 case "47":
                     return await Submit47Call(request);
                 case "H28b":
