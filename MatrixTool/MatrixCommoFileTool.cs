@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.DataProtection.KeyManagement;
 using System.Text;
+using System.Timers;
 
 namespace MatrixYhToolService.MatrixTool
 {
@@ -38,6 +39,36 @@ namespace MatrixYhToolService.MatrixTool
             "aprvnpo", "trtItemCont", "trtExctCont", "lmtUsescp", "matn_used_flag",
             "crteTime", "begnDate","endDate","listType","regSpec", "minPacCnt","minPacunt","gennameCodg","drugDosform", "drugstdcode","isEthdrug","minPrepunt"
         };
+        /// <summary>
+        /// 45交易
+        /// AKC190 -> 就诊编号 (regisNum)
+        /// YKA105 -> 记账流水号 (billSerialNum)
+        /// YKA266 -> 医院项目编码 (hosItemCode)
+        /// YKA268 -> 医院项目名称 (hosItemName)
+        /// YKA002 -> 医保通用项目编码 (mInsuranceItemCode)
+        /// YKA003 -> 医保通用项目名称 (mInsuranceItemName)
+        /// YKA001 -> 大类编码 (categoryCode)
+        /// AKB020 -> 服务机构编号 (orgNum)
+        /// AAC001 -> 个人编号 (pCode)
+        /// AKC226 -> 数量 (quantity)
+        /// AKC225 -> 实际价格 (actualPrice)
+        /// YKA315 -> 金额(amount)
+        /// YKA299 -> 基金支付限价(paymentLimitPrice)
+        /// YKA096 -> 自付比例(selfPayRatio)
+        /// YKA295 -> 最小计价单位(miniPricingUnit)
+        /// AKA074 -> 规格(specification)
+        /// AKA070 -> 剂型(dosageForm)
+        /// YKE123 -> 明细发生时间(detailOccurrenceTime)
+        /// YKA317 -> 明细项目全自费金额(detailFullSelfPayAmount)
+        /// YKA318 -> 明细项目挂钩自付金额(detailLinkedSelfPayAmount)
+        /// YKA319 -> 明细项目符合范围金额(detailEligibleScopeAmount)
+        /// </summary>
+        private static readonly string[] call45ColumnKeys = new[]
+        {
+            "regisNum", "billSerialNum", "hosItemCode", "hosItemName", "mInsuranceItemCode", "mInsuranceItemName","categoryCode",
+            "orgNum", "pCode", "quantity", "actualPrice", "amount", "paymentLimitPrice","selfPayRatio", "miniPricingUnit", "specification", "dosageForm",
+            "detailOccurrenceTime", "detailFullSelfPayAmount", "detailLinkedSelfPayAmount", "detailEligibleScopeAmount"
+        };
 
         public static async Task<List<Dictionary<string, string>>> ReadTxtAsync(string filePath,string callType)
         {
@@ -45,6 +76,9 @@ namespace MatrixYhToolService.MatrixTool
             string[] columnKeys;
             switch (callType)
             {
+                case "45":
+                    columnKeys = call45ColumnKeys;
+                    break;
                 case "47":
                     columnKeys = call47ColumnKeys;
                     break;

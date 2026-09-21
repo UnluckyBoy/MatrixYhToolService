@@ -85,6 +85,13 @@
                     <prm_yka103>{settlementNum}</prm_yka103>
                     <prm_ykb065>{insuranceMethod}</prm_ykb065>
                 </input>",
+            ["45"] = @"<?xml version=""1.0"" encoding=""GBK"" standalone=""yes"" ?>
+                <input>
+                    <prm_akc190>{regisNum}</prm_akc190>
+                    <prm_aka130>{settlementType}</prm_aka130>
+                    <prm_yab003>{clearingCenter}</prm_yab003>
+                    <prm_outputfile>{outputFilePath}</prm_outputfile>
+                </input>",
             ["91ANew"] = @"<?xml version=""1.0"" encoding=""GBK"" standalone=""yes"" ?>
                 <input>
                     <prm_aaalsh>{downloadNum}</prm_aaalsh>

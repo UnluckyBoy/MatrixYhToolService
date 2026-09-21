@@ -43,6 +43,8 @@ namespace MatrixYhToolService.MatrixServices
                     return await Submit42Call(request);
                 //case "44":
                 //    return await Submit44Call(request);
+                case "45":
+                    return await Submit45Call(request);
                 case "47":
                     return await Submit47Call(request);
                 case "H28b":
@@ -290,6 +292,76 @@ namespace MatrixYhToolService.MatrixServices
             else
             {
                 return MatrixWebResponse.Failure(result.OutputXml);
+            }
+        }
+
+        /// <summary>
+        /// 45交易-费用分割
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns></returns>
+        private async Task<MatrixWebResponse> Submit45Call(CallRequestBody request)
+        {
+            string contentRootPath = _env.ContentRootPath;
+            var call45Path = _configuration["FileStorage:Call45Path"];
+            var tempFolderPath = Path.Combine(contentRootPath, MatrixStringTool.checkStr(call45Path, "Call45"));
+
+            if (!Directory.Exists(tempFolderPath))
+                Directory.CreateDirectory(tempFolderPath);
+
+            string timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss_fff");
+            string tempFileName = $"{timestamp}.txt";
+            string outputFilePath = Path.Combine(tempFolderPath, tempFileName);
+
+            MatrixLogHelper.LogInformation($"生成的{request.callNum}交易入参请求");
+            var parameters = new Dictionary<string, string>
+            {
+                ["regisNum"] = request.regisNum,
+                ["settlementType"] = request.settlementType,
+                ["clearingCenter"] = request.clearingCenter,
+                ["outputFilePath"] = outputFilePath
+            };
+            string tempXmlParameter = MatrixXmlTemplate.GenerateXml(request.callNum, parameters);
+            MatrixLogHelper.LogInformation($"生成的{request.callNum}交易入参：\n{tempXmlParameter}");
+
+            var result = await _yhHelper.CallAsync(request.callNum, tempXmlParameter);
+            MatrixLogHelper.LogInformation($"{request.callNum}交易反参：\n{result.OutputXml}");
+            if (result.AppCode == null || Convert.ToInt32(result.AppCode) <= 0)
+            {
+                MatrixLogHelper.LogInformation($"{request.callNum}-交易反参：\n{result.AppMsg}");//写入日志
+                return MatrixWebResponse.Failure(result);
+            }
+            else
+            {
+                MatrixLogHelper.LogInformation($"{request.callNum}-交易反参：\n{result.OutputXml}");//写入日志
+
+                if (!File.Exists(outputFilePath))
+                {
+                    MatrixLogHelper.LogWarning($"文件不存在：{outputFilePath}");
+                    return MatrixWebResponse.Failure(null, "文件不存在");
+                }
+
+                MatrixLogHelper.LogInformation($"解析文件：{outputFilePath}");
+                var parsedData = await MatrixCommoFileTool.ReadTxtAsync(outputFilePath, request.callNum);
+                if (parsedData != null)
+                {
+                    try
+                    {
+                        File.Delete(outputFilePath);
+                        MatrixLogHelper.LogInformation($"文件已删除：{outputFilePath}");
+                        return MatrixWebResponse.Success(parsedData);
+                    }
+                    catch (Exception ex)
+                    {
+                        MatrixLogHelper.LogError(ex, $"删除文件失败：{outputFilePath}");
+                        return MatrixWebResponse.Failure(result);
+                    }
+                }
+                else
+                {
+                    MatrixLogHelper.LogInformation("文件内容为空，不删除文件：{FilePath}", outputFilePath);
+                    return MatrixWebResponse.Failure("文件内容为空");
+                }
             }
         }
 
