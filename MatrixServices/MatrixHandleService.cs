@@ -3,6 +3,8 @@ using MatrixYhToolService.Model;
 using Microsoft.AspNetCore.JsonPatch.Internal;
 using Newtonsoft.Json.Linq;
 using System.Text;
+using NPOI.SS.UserModel;
+using NPOI.XSSF.Streaming;
 
 namespace MatrixYhToolService.MatrixServices
 {
@@ -13,6 +15,8 @@ namespace MatrixYhToolService.MatrixServices
         private readonly YhInterfaceHelper _yhHelper;
         //private readonly ILogger<MatrixHandleService> _logger;
 
+        // 下载定义数量
+        private const int PageSize = 1000;
         private string tempOrgCode = "H52263200141";
 
         public MatrixHandleService(IWebHostEnvironment env, IConfiguration configuration, YhInterfaceHelper yhHelper)
@@ -53,8 +57,11 @@ namespace MatrixYhToolService.MatrixServices
                     return await SubmitH7103Call(request);
                 case "H7106":
                     return await SubmitH7106Call(request);
-                case "91ANew":
-                    return await Submit91ACall(request);
+                case "91A":
+                    //return await Submit91ACall(request);
+                    return await Submit91Call(request);
+                case "91B":
+                    return await Submit91Call(request);
                 default:
                     MatrixLogHelper.LogWarning($"未知交易号：{request.callNum}");
                     return MatrixWebResponse.Failure(null, $"不支持的调用类型: {request.callNum}");
@@ -509,77 +516,239 @@ namespace MatrixYhToolService.MatrixServices
         }
 
         /// <summary>
-        /// 91A交易接口
+        /// 91交易接口系列
         /// </summary>
         /// <param name="request"></param>
         /// <returns></returns>
-        private async Task<MatrixWebResponse> Submit91ACall(CallRequestBody request)
+        private Task<MatrixWebResponse> Submit91Call(CallRequestBody request)
         {
-            // 准备文件路径
-            string contentRootPath = _env.ContentRootPath;
-            var call91APath = _configuration["FileStorage:call91APath"];
-            var tempFolderPath = Path.Combine(contentRootPath, MatrixStringTool.checkStr(call91APath, "Call47"));
+            switch (request.callNum)
+            {
+                case "91A":
+                    return Download91CallAsync(request, "Call91A", "91A");
 
+                case "91B":
+                    return Download91CallAsync(request, "Call91B", "91B");
+                // 以后扩展
+                // case "91C":
+                //     return Download91CallAsync(request, "Call91C", "91C");
+
+                default:
+                    return Task.FromResult(MatrixWebResponse.Failure($"不支持的交易：{request.callNum}"));
+            }
+        }
+        /// <summary>
+        /// 91X系列接口公共
+        /// </summary>
+        /// <param name="request"></param>
+        /// <param name="defaultSubFolder"></param>
+        /// <param name="logTag"></param>
+        /// <returns></returns>
+        private async Task<MatrixWebResponse> Download91CallAsync(CallRequestBody request,string defaultSubFolder,string logTag)
+        {
+            string contentRootPath = _env.ContentRootPath;
+            var call91Path = _configuration["FileStorage:call91Path"];
+            var tempFolderPath = Path.Combine(contentRootPath, MatrixStringTool.checkStr(call91Path, defaultSubFolder));
             if (!Directory.Exists(tempFolderPath))
                 Directory.CreateDirectory(tempFolderPath);
 
-            string timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss_fff");
-            string tempFileName = $"{timestamp}.txt";
-            string outputFilePath = Path.Combine(tempFolderPath, tempFileName);
+            string resultTimestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss_fff");
+            //string resultFilePath = Path.Combine(tempFolderPath, $"result_{request.callNum}_{resultTimestamp}.xlsx
+            string resultFilePath = Path.Combine(tempFolderPath, $"result_{request.callNum}.xlsx");
 
-            // 生成 XML 参数
-            var parameters = new Dictionary<string, string>
-            {
-                ["downloadNum"] = request.downloadNum,
-                ["outputFilePath"] = outputFilePath
-            };
-            string tempXmlParameter = MatrixXmlTemplate.GenerateXml(request.callNum, parameters);
-            MatrixLogHelper.LogInformation($"生成的{request.callNum}交易入参：\n{tempXmlParameter}");
+            string downloadNum = request.downloadNum ?? string.Empty;
+            int round = 0;
+            long totalRows = 0;
 
-            // 调用 COM 组件
-            var result = await _yhHelper.CallAsync(request.callNum, tempXmlParameter);
-            // 处理返回结果
-            if (result.AppCode == null || Convert.ToInt32(result.AppCode) <= 0)
-            {
-                MatrixLogHelper.LogInformation($"{request.callNum}-交易反参：\n{result.AppMsg}");//写入日志
-                return MatrixWebResponse.Failure(result);
-            }
-            else
-            {
-                MatrixLogHelper.LogInformation($"{request.callNum}-交易反参：\n{result.OutputXml}");//写入日志
+            SXSSFWorkbook workbook = null;
+            ISheet sheet = null;
+            int rowIndex = 0;
+            string[] headers = null;
 
-                if (!File.Exists(outputFilePath))
+            try
+            {
+                while (true)
                 {
-                    MatrixLogHelper.LogWarning($"文件不存在：{outputFilePath}");
-                    return MatrixWebResponse.Failure(null, "文件不存在");
+                    round++;
+                    string timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss_fff");
+                    string outputFilePath = Path.Combine(tempFolderPath, $"{timestamp}_{round}.txt");
+
+                    var parameters = new Dictionary<string, string>
+                    {
+                        ["downloadNum"] = downloadNum,
+                        ["outputFilePath"] = outputFilePath
+                    };
+                    string tempXmlParameter = MatrixXmlTemplate.GenerateXml(request.callNum, parameters);
+                    MatrixLogHelper.LogInformation($"[{request.callNum}] 第{round}次入参（downloadNum={downloadNum}）");
+
+                    var result = await _yhHelper.CallAsync(request.callNum, tempXmlParameter);
+
+                    if (result.AppCode == null || Convert.ToInt32(result.AppCode) <= 0)
+                    {
+                        MatrixLogHelper.LogInformation($"[{request.callNum}] 第{round}次反参：\n{result.AppMsg}");
+                        SaveWorkbook(workbook, resultFilePath);
+                        return MatrixWebResponse.Failure(result);
+                    }
+
+                    MatrixLogHelper.LogInformation($"[{request.callNum}] 第{round}次反参：\n{result.OutputXml}");
+
+                    if (!File.Exists(outputFilePath))
+                    {
+                        MatrixLogHelper.LogWarning($"文件不存在：{outputFilePath}");
+                        SaveWorkbook(workbook, resultFilePath);
+                        return MatrixWebResponse.Failure(null, "文件不存在");
+                    }
+
+                    var parsedData = await MatrixCommoFileTool.ReadTxtAsync(outputFilePath, request.callNum);
+                    int batchCount = parsedData?.Count ?? 0;
+
+                    if (batchCount == 0)
+                    {
+                        MatrixLogHelper.LogInformation($"第{round}次返回为空，下载结束");
+                        TryDeleteFile(outputFilePath);
+                        break;
+                    }
+
+                    if (workbook == null)
+                    {
+                        workbook = new SXSSFWorkbook(100) { CompressTempFiles = true };
+                        sheet = workbook.CreateSheet("result");
+                    }
+
+                    if (headers == null)
+                    {
+                        headers = parsedData[0].Keys.ToArray();
+                        var headerRow = sheet.CreateRow(rowIndex++);
+                        for (int i = 0; i < headers.Length; i++)
+                            headerRow.CreateCell(i).SetCellValue(headers[i]);
+                    }
+
+                    foreach (var row in parsedData)
+                    {
+                        var dataRow = sheet.CreateRow(rowIndex++);
+                        for (int i = 0; i < headers.Length; i++)
+                        {
+                            var val = row.TryGetValue(headers[i], out var v) ? v : null;
+                            dataRow.CreateCell(i).SetCellValue(val ?? string.Empty);
+                        }
+                    }
+                    totalRows += batchCount;
+
+                    string maxLsh = GetMaxLsh(parsedData);
+
+                    parsedData = null;
+                    TryDeleteFile(outputFilePath);
+
+                    if (batchCount < PageSize)
+                    {
+                        MatrixLogHelper.LogInformation($"第{round}次返回 {batchCount} 行（< {PageSize}），下载完成");
+                        break;
+                    }
+
+                    if (string.IsNullOrEmpty(maxLsh))
+                    {
+                        MatrixLogHelper.LogWarning("未取到 hilistLsh，终止下载防止死循环");
+                        break;
+                    }
+                    if (string.Equals(maxLsh, downloadNum, StringComparison.Ordinal))
+                    {
+                        MatrixLogHelper.LogWarning($"流水号未推进（仍为 {downloadNum}），终止下载防止死循环");
+                        break;
+                    }
+
+                    downloadNum = maxLsh;
                 }
-                MatrixLogHelper.LogInformation($"解析文件：{outputFilePath}");
+            }
+            catch (Exception ex)
+            {
+                MatrixLogHelper.LogError(ex, $"{logTag} 下载出错（已下载 {totalRows} 行）");
+                SaveWorkbook(workbook, resultFilePath);
+                return MatrixWebResponse.Failure($"下载出错：{ex.Message}，已保存：{resultFilePath}");
+            }
 
-                //var parsedData = await MatrixCommoFileTool.Read91ANewTxtAsync(outputFilePath);
-                List<Dictionary<string, string>> resultData= new List<Dictionary<string, string>>();
-                var parsedData = await MatrixCommoFileTool.ReadTxtAsync(outputFilePath, request.callNum);
-                if (parsedData != null)
+            SaveWorkbook(workbook, resultFilePath);
+
+            MatrixLogHelper.LogInformation($"{logTag} 下载完成，共 {totalRows} 行，文件：{resultFilePath}");
+
+            return MatrixWebResponse.Success(new
+            {
+                filePath = resultFilePath,
+                totalRows,
+                rounds = round
+            });
+        }
+
+        private void SaveWorkbook(SXSSFWorkbook workbook, string path)
+        {
+            if (workbook == null) return;
+            try
+            {
+                using var fs = new FileStream(path, FileMode.Create, FileAccess.Write);
+                workbook.Write(fs);
+                fs.Flush();
+                MatrixLogHelper.LogInformation($"xlsx 已保存：{path}");
+            }
+            catch (Exception ex)
+            {
+                MatrixLogHelper.LogError(ex, $"保存 xlsx 失败：{path}");
+            }
+            finally
+            {
+                try { workbook.Close(); } catch { }
+                try { workbook.Dispose(); } catch { }
+            }
+        }
+
+        /// <summary>
+        /// 取本次数据中 hilistLsh 的最大值（优先按数值比较，非数值按字符串比较兜底）
+        /// </summary>
+        private static string GetMaxLsh(List<Dictionary<string, string>> data)
+        {
+            long maxNum = long.MinValue;
+            string maxStr = null;
+
+            foreach (var row in data)
+            {
+                if (!row.TryGetValue("hilistLsh", out var lsh) || string.IsNullOrWhiteSpace(lsh))
+                    continue;
+
+                if (long.TryParse(lsh, out var num))
                 {
-                    //try
-                    //{
-                    //    File.Delete(outputFilePath);
-                    //    MatrixLogHelper.LogInformation($"文件已删除：{outputFilePath}");
-                    //    return MatrixWebResponse.Success(parsedData);
-                    //}
-                    //catch (Exception ex)
-                    //{
-                    //    MatrixLogHelper.LogError(ex, $"删除文件失败：{outputFilePath}");
-                    //    return MatrixWebResponse.Failure(result);
-                    //}
-                    resultData = parsedData;
-                    return MatrixWebResponse.Success(parsedData.Count);
+                    if (num > maxNum)
+                    {
+                        maxNum = num;
+                        maxStr = lsh;
+                    }
                 }
                 else
                 {
-                    MatrixLogHelper.LogInformation("文件内容为空，不删除文件：{FilePath}", outputFilePath);
-                    return MatrixWebResponse.Failure("文件内容为空");
+                    // 非数字流水号，按字符串比较兜底
+                    if (maxStr == null || string.Compare(lsh, maxStr, StringComparison.Ordinal) > 0)
+                        maxStr = lsh;
                 }
             }
+
+            return maxStr;
         }
+
+        /// <summary>
+        /// 安全删除文件（不抛出异常）
+        /// </summary>
+        private void TryDeleteFile(string path)
+        {
+            try
+            {
+                if (File.Exists(path))
+                {
+                    File.Delete(path);
+                    MatrixLogHelper.LogInformation($"文件已删除：{path}");
+                }
+            }
+            catch (Exception ex)
+            {
+                MatrixLogHelper.LogError(ex, $"删除文件失败：{path}");
+            }
+        }
+      
     }
 }

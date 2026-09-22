@@ -97,6 +97,16 @@
                     <prm_aaalsh>{downloadNum}</prm_aaalsh>
                     <prm_outputfile>{outputFilePath}</prm_outputfile>
                 </input>",
+            ["91A"] = @"<?xml version=""1.0"" encoding=""GBK"" standalone=""yes"" ?>
+                <input>
+                    <prm_aaalsh>{downloadNum}</prm_aaalsh>
+                    <prm_outputfile>{outputFilePath}</prm_outputfile>
+                </input>",
+            ["91B"] = @"<?xml version=""1.0"" encoding=""GBK"" standalone=""yes"" ?>
+                <input>
+                    <prm_aaalsh>{downloadNum}</prm_aaalsh>
+                    <prm_outputfile>{outputFilePath}</prm_outputfile>
+                </input>",
             ["OTHER_ORG_CODE"] = @"<?xml version=""1.0"" encoding=""GBK"" standalone=""yes"" ?>
                 <input>
                     <field1>{orgCode}</field1>

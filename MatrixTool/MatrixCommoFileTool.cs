@@ -39,6 +39,18 @@ namespace MatrixYhToolService.MatrixTool
             "aprvnpo", "trtItemCont", "trtExctCont", "lmtUsescp", "matn_used_flag",
             "crteTime", "begnDate","endDate","listType","regSpec", "minPacCnt","minPacunt","gennameCodg","drugDosform", "drugstdcode","isEthdrug","minPrepunt"
         };
+        private static readonly string[] call91AColumnKeys = new[]
+        {
+            "hilistLsh", "hilistCode", "hilistName", "updtTime", "medChrgitmType", "chrgitmLv",
+            "pinyin", "wubi", "spec", "dosformName","memo", "prodentpCode", "prodentpName", "manuNatRegn", "drugProdname",
+            "aprvnpo", "trtItemCont", "trtExctCont", "lmtUsescp", "matn_used_flag",
+            "crteTime", "begnDate","endDate","listType","regSpec", "minPacCnt","minPacunt","gennameCodg","drugDosform", "drugstdcode","isEthdrug","minPrepunt"
+        };
+        private static readonly string[] call91BColumnKeys = new[]
+        {
+            "hilistLsh", "hilistCode", "hilistLmtpricType", "begndate", "insuAdmdvs", "overlmtDspoWay","enddate", "hilistPricUplmtAmt"
+        };
+
         /// <summary>
         /// 45交易
         /// AKC190 -> 就诊编号 (regisNum)
@@ -87,6 +99,12 @@ namespace MatrixYhToolService.MatrixTool
                     break;
                 case "91ANew":
                     columnKeys = call91ANewColumnKeys;
+                    break;
+                case "91A":
+                    columnKeys = call91AColumnKeys;
+                    break;
+                case "91B":
+                    columnKeys = call91BColumnKeys;
                     break;
                 default:
                     columnKeys = Array.Empty<string>();
